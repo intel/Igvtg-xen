@@ -98,7 +98,7 @@ static struct range *alloc_range(
 {
     struct range *x;
 
-    if ( r->nr_ranges == 0 )
+    if ( !(r->flags & RANGESETF_unlimited) && r->nr_ranges == 0 )
         return NULL;
 
     x = xmalloc(struct range);
@@ -335,7 +335,7 @@ struct rangeset *rangeset_new(
     INIT_LIST_HEAD(&r->range_list);
     r->nr_ranges = -1;
 
-    BUG_ON(flags & ~RANGESETF_prettyprint_hex);
+    BUG_ON(flags & ~(RANGESETF_prettyprint_hex | RANGESETF_unlimited));
     r->flags = flags;
 
     if ( name != NULL )
