@@ -71,6 +71,7 @@ all: acpi subdirs-all
 acpi:
 	$(MAKE) -C $(ACPI_PATH)  ACPI_BUILD_DIR=$(CURDIR) DSDT_FILES="$(DSDT_FILES)"
 
+seabios.o: roms.inc
 rombios.o: roms.inc
 smbios.o: CFLAGS += -D__SMBIOS_DATE__="\"$(SMBIOS_REL_DATE)\""
 
@@ -101,7 +102,12 @@ ifneq ($(STDVGA_ROM),)
 	echo "#ifdef ROM_INCLUDE_VGABIOS" >> $@.new
 	sh ./mkhex vgabios_stdvga $(STDVGA_ROM) >> $@.new
 	echo "#endif" >> $@.new
+
+	echo "#ifdef SEABIOS_INCLUDE_VGABIOS" >> $@.new
+	sh ./mkhex seabios_vgabios_stdvga $(STDVGA_ROM) >> $@.new
+	echo "#endif" >> $@.new
 endif
+
 ifneq ($(CIRRUSVGA_ROM),)
 	echo "#ifdef ROM_INCLUDE_VGABIOS" >> $@.new
 	sh ./mkhex vgabios_cirrusvga $(CIRRUSVGA_ROM) >> $@.new
