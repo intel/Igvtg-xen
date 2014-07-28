@@ -29,6 +29,9 @@
 #include <acpi2_0.h>
 #include <libacpi.h>
 
+#define SEABIOS_INCLUDE_VGABIOS
+#include "roms.inc"
+
 struct seabios_info {
     char signature[14]; /* XenHVMSeaBIOS\0 */
     uint8_t length;     /* Length of this struct */
@@ -141,10 +144,20 @@ static void seabios_load(const struct bios_config *bios,
     seabios_config.image_size = bios_length;
 }
 
+static void seabios_load_roms(void)
+{
+	if (virtual_vga != VGA_vgt)
+		return;
+
+	printf("Loading Standard VGABIOS ...\n");
+        memcpy((void *)VGABIOS_PHYSICAL_ADDRESS,
+               seabios_vgabios_stdvga, sizeof(seabios_vgabios_stdvga));
+}
+
 struct bios_config seabios_config = {
     .name = "SeaBIOS",
 
-    .load_roms = NULL,
+    .load_roms = seabios_load_roms,
 
     .bios_load = seabios_load,
 
