@@ -28,6 +28,7 @@
 #include "acpi/acpi2_0.h"
 
 #define ROM_INCLUDE_SEABIOS
+#define SEABIOS_INCLUDE_VGABIOS
 #include "roms.inc"
 
 extern unsigned char dsdt_anycpu_qemu_xen[];
@@ -132,6 +133,16 @@ static void seabios_setup_e820(void)
     dump_e820_table(e820, info->e820_nr);
 }
 
+static void seabios_load_roms(void)
+{
+	if (virtual_vga != VGA_vgt)
+		return;
+
+	printf("Loading Standard VGABIOS ...\n");
+        memcpy((void *)VGABIOS_PHYSICAL_ADDRESS,
+               seabios_vgabios_stdvga, sizeof(seabios_vgabios_stdvga));
+}
+
 struct bios_config seabios_config = {
     .name = "SeaBIOS",
 
@@ -140,7 +151,7 @@ struct bios_config seabios_config = {
 
     .bios_address = 0x100000 - sizeof(seabios),
 
-    .load_roms = NULL,
+    .load_roms = seabios_load_roms,
 
     .bios_load = NULL,
 
