@@ -600,6 +600,29 @@ DEFINE_XEN_GUEST_HANDLE(xen_reserved_device_memory_map_t);
 #endif /* defined(__XEN__) || defined(__XEN_TOOLS__) */
 
 /*
+ * Translate the given guest PFNs to MFNs
+ */
+#define XENMEM_get_mfn_from_pfn    28
+struct xen_get_mfn_from_pfn {
+    /*
+     * Pointer to buffer to fill with list of pfn.
+     * for IN, it contains the guest PFN that need to translated
+     * for OUT, it contains the translated MFN. or INVALID_MFN if no valid translation
+     */
+    XEN_GUEST_HANDLE(xen_pfn_t) pfn_list;
+
+    /*
+     * IN: Size of the pfn_array.
+     */
+    unsigned int nr_pfns;
+
+    /* IN: which domain */
+    domid_t domid;
+};
+typedef struct xen_get_mfn_from_pfn xen_get_mfn_from_pfn_t;
+DEFINE_XEN_GUEST_HANDLE(xen_get_mfn_from_pfn_t);
+
+/*
  * XENMEM_get_vnumainfo used by guest to get
  * vNUMA topology from hypervisor.
  */
@@ -648,7 +671,7 @@ struct xen_vnuma_topology_info {
 typedef struct xen_vnuma_topology_info xen_vnuma_topology_info_t;
 DEFINE_XEN_GUEST_HANDLE(xen_vnuma_topology_info_t);
 
-/* Next available subop number is 28 */
+/* Next available subop number is 29 */
 
 #endif /* __XEN_PUBLIC_MEMORY_H__ */
 
