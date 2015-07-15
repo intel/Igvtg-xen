@@ -837,11 +837,15 @@ static void initiate_domain_create(libxl__egc *egc,
      * enabled because it needs to populated entire page table for
      * guest. To stay on the safe side, we disable PCI device
      * assignment when PoD is enabled.
+     * The same requirement also applies to Intel GVT-g case.
      */
     if (d_config->c_info.type == LIBXL_DOMAIN_TYPE_HVM &&
-        d_config->num_pcidevs && pod_enabled) {
+        pod_enabled) {
+        if (d_config->num_pcidevs)
+            LOG(ERROR, "PCI device assignment for HVM guest failed due to PoD enabled");
+        if (libxl_defbool_val(d_config->b_info.u.hvm.vgt))
+            LOG(ERROR, "Intel GVT-g for HVM guest failed due to PoD enabled");
         ret = ERROR_INVAL;
-        LOG(ERROR, "PCI device assignment for HVM guest failed due to PoD enabled");
         goto error_out;
     }
 
