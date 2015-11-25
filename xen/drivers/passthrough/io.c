@@ -19,14 +19,131 @@
 
 #include <xen/event.h>
 #include <xen/iommu.h>
+#include <xen/cpu.h>
 #include <xen/irq.h>
 #include <asm/hvm/irq.h>
 #include <asm/hvm/iommu.h>
 #include <asm/hvm/support.h>
-#include <xen/hvm/irq.h>
 #include <xen/tasklet.h>
 
 static void hvm_dirq_assist(unsigned long _d);
+
+static DEFINE_PER_CPU(struct list_head, dpci_list);
+
+/*
+ * These two bit states help to safely schedule, deschedule, and wait until
+ * the softirq has finished.
+ *
+ * The semantics behind these two bits is as follow:
+ *  - STATE_SCHED - whoever modifies it has to ref-count the domain (->dom).
+ *  - STATE_RUN - only softirq is allowed to set and clear it. If it has
+ *      been set hvm_dirq_assist will RUN with a saved value of the
+ *      'struct domain' copied from 'pirq_dpci->dom' before STATE_RUN was set.
+ *
+ * The usual states are: STATE_SCHED(set) -> STATE_RUN(set) ->
+ * STATE_SCHED(unset) -> STATE_RUN(unset).
+ *
+ * However the states can also diverge such as: STATE_SCHED(set) ->
+ * STATE_SCHED(unset) -> STATE_RUN(set) -> STATE_RUN(unset). That means
+ * the 'hvm_dirq_assist' never run and that the softirq did not do any
+ * ref-counting.
+ */
+
+enum {
+    STATE_SCHED,
+    STATE_RUN
+};
+
+/*
+ * This can be called multiple times, but the softirq is only raised once.
+ * That is until the STATE_SCHED state has been cleared. The state can be
+ * cleared by: the 'dpci_softirq' (when it has executed 'hvm_dirq_assist'),
+ * or by 'pt_pirq_softirq_reset' (which will try to clear the state before
+ * the softirq had a chance to run).
+ */
+
+/*
+static void raise_softirq_for(struct hvm_pirq_dpci *pirq_dpci)
+{
+    unsigned long flags;
+
+    if ( test_and_set_bit(STATE_SCHED, &pirq_dpci->state) )
+        return;
+
+    get_knownalive_domain(pirq_dpci->dom);
+
+    local_irq_save(flags);
+    list_add_tail(&pirq_dpci->softirq_list, &this_cpu(dpci_list));
+    local_irq_restore(flags);
+
+    raise_softirq(HVM_DPCI_SOFTIRQ);
+}
+*/
+
+/*
+ * If we are racing with softirq_dpci (STATE_SCHED) we return
+ * true. Otherwise we return false.
+ *
+ * If it is false, it is the callers responsibility to make sure
+ * that the softirq (with the event_lock dropped) has ran.
+ */
+bool_t pt_pirq_softirq_active(struct hvm_pirq_dpci *pirq_dpci)
+{
+    if ( pirq_dpci->state & ((1 << STATE_RUN) | (1 << STATE_SCHED)) )
+        return 1;
+
+    /*
+     * If in the future we would call 'raise_softirq_for' right away
+     * after 'pt_pirq_softirq_active' we MUST reset the list (otherwise it
+     * might have stale data).
+     */
+    return 0;
+}
+
+/*
+ * Reset the pirq_dpci->dom parameter to NULL.
+ *
+ * This function checks the different states to make sure it can do it
+ * at the right time. If it unschedules the 'hvm_dirq_assist' from running
+ * it also refcounts (which is what the softirq would have done) properly.
+ */
+
+#if 0
+static void pt_pirq_softirq_reset(struct hvm_pirq_dpci *pirq_dpci)
+{
+    struct domain *d = pirq_dpci->dom;
+
+    ASSERT(spin_is_locked(&d->event_lock));
+
+    switch ( cmpxchg(&pirq_dpci->state, 1 << STATE_SCHED, 0) )
+    {
+    case (1 << STATE_SCHED):
+        /*
+         * We are going to try to de-schedule the softirq before it goes in
+         * STATE_RUN. Whoever clears STATE_SCHED MUST refcount the 'dom'.
+         */
+        put_domain(d);
+        /* fallthrough. */
+    case (1 << STATE_RUN):
+    case (1 << STATE_RUN) | (1 << STATE_SCHED):
+        /*
+         * The reason it is OK to reset 'dom' when STATE_RUN bit is set is due
+         * to a shortcut the 'dpci_softirq' implements. It stashes the 'dom'
+         * in local variable before it sets STATE_RUN - and therefore will not
+         * dereference '->dom' which would crash.
+         */
+        pirq_dpci->dom = NULL;
+        break;
+    }
+    /*
+     * Inhibit 'hvm_dirq_assist' from doing anything useful and at worst
+     * calling 'set_timer' which will blow up (as we have called kill_timer
+     * or never initialized it). Note that we hold the lock that
+     * 'hvm_dirq_assist' could be spinning on.
+     */
+    pirq_dpci->masked = 0;
+}
+#endif
 
 bool_t pt_irq_need_timer(uint32_t flags)
 {
@@ -665,7 +782,7 @@ static void dpci_softirq(void)
          */
         if ( test_and_clear_bit(STATE_SCHED, &pirq_dpci->state) )
         {
-            hvm_dirq_assist(d, pirq_dpci);
+            _hvm_dirq_assist(d, pirq_dpci, NULL);
             put_domain(d);
         }
         clear_bit(STATE_RUN, &pirq_dpci->state);

@@ -552,7 +552,10 @@ static int libxl__build_device_model_args_old(libxl__gc *gc,
             case LIBXL_VGA_INTERFACE_TYPE_NONE:
                 flexarray_append_pair(dm_args, "-vga", "none");
                 break;
-            }
+            case LIBXL_VGA_INTERFACE_TYPE_QXL:
+                break;
+
+	    }
         }
 
         if (b_info->u.hvm.boot) {
@@ -960,7 +963,14 @@ static int libxl__build_device_model_args_new(libxl__gc *gc,
                 break;
             case LIBXL_VGA_INTERFACE_TYPE_NONE:
                 break;
-            }
+            case LIBXL_VGA_INTERFACE_TYPE_QXL:
+                /* QXL have 2 ram regions, ram and vram */
+                flexarray_append_pair(dm_args, "-device",
+                    GCSPRINTF("qxl-vga,vram_size_mb=%"PRIu64",ram_size_mb=%"PRIu64,
+                    (b_info->video_memkb/2/1024), (b_info->video_memkb/2/1024) ) );
+                break;
+
+		}
         }
 
         if (b_info->u.hvm.boot) {

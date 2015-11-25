@@ -93,12 +93,14 @@ struct hvm_irq_dpci {
 /* Machine IRQ to guest device/intx mapping. */
 struct hvm_pirq_dpci {
     uint32_t flags;
+    unsigned int state;
     bool_t masked;
     uint16_t pending;
     struct list_head digl_list;
     struct domain *dom;
     struct hvm_gmsi_info gmsi;
     struct timer timer;
+    struct list_head softirq_list;
 };
 
 void pt_pirq_init(struct domain *, struct hvm_pirq_dpci *);
