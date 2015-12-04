@@ -248,13 +248,13 @@ SEABIOS_UPSTREAM_URL ?= http://xenbits.xen.org/git-http/seabios.git
 MINIOS_UPSTREAM_URL ?= http://xenbits.xen.org/git-http/mini-os.git
 else
 OVMF_UPSTREAM_URL ?= git://xenbits.xen.org/ovmf.git
-QEMU_UPSTREAM_URL ?= git://xenbits.xen.org/qemu-upstream-4.6-testing.git
+QEMU_UPSTREAM_URL ?= git://vgt.sh.intel.com/qemu-xen.git
 QEMU_TRADITIONAL_URL ?= git://xenbits.xen.org/qemu-xen-4.6-testing.git
 SEABIOS_UPSTREAM_URL ?= git://xenbits.xen.org/seabios.git
 MINIOS_UPSTREAM_URL ?= git://xenbits.xen.org/mini-os.git
 endif
 OVMF_UPSTREAM_REVISION ?= cb9a7ebabcd6b8a49dc0854b2f9592d732b5afbd
-QEMU_UPSTREAM_REVISION ?= qemu-xen-4.6.0
+QEMU_UPSTREAM_REVISION ?= master
 MINIOS_UPSTREAM_REVISION ?= xen-RELEASE-4.6.0
 # Fri Jun 26 11:58:40 2015 +0100
 # Correct printf formatting for tpm_tis message.
