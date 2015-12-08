@@ -1500,8 +1500,6 @@ static void destroy_finish_check(libxl__egc *egc,
  * force while it's running. In this case, we still try our best to destroy
  * the vgt instance.
  */
-
-/*
 static void destroy_vgt_instance(int domid)
 {
     const char *path = "/sys/kernel/vgt/control/create_vgt_instance";
@@ -1516,7 +1514,6 @@ static void destroy_vgt_instance(int domid)
     (void)fprintf(vgt_file, "%d\n", -domid);
     (void)fclose(vgt_file);
 }
-*/
 
 void libxl__domain_destroy(libxl__egc *egc, libxl__domain_destroy_state *dds)
 {
@@ -1711,6 +1708,16 @@ static void devices_destroy_cb(libxl__egc *egc,
     }
     libxl__userdata_destroyall(gc, domid);
 
+	destroy_vgt_instance(domid);
+	
+	rc = xc_domain_destroy(ctx->xch, domid);
+	if (rc < 0) {
+		LIBXL__LOG_ERRNOVAL(ctx, LIBXL__LOG_ERROR, rc, "xc_domain_destroy failed for %d", domid);
+		rc = ERROR_FAIL;
+		goto out;
+	}
+	rc = 0;
+
     libxl__unlock_domain_userdata(lock);
 
     /* Clean up qemu-save and qemu-resume files. They are
@@ -1729,8 +1736,6 @@ static void devices_destroy_cb(libxl__egc *egc,
         ctx->xch = xc_interface_open(ctx->lg,0,0);
         if (!ctx->xch) goto badchild;
 
-        rc = xc_domain_destroy(ctx->xch, domid);
-        if (rc < 0) goto badchild;
         _exit(0);
 
     badchild:
