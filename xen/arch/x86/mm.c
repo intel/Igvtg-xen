@@ -4452,7 +4452,7 @@ long arch_memory_op(unsigned long cmd, XEN_GUEST_HANDLE_PARAM(void) arg)
 #endif
 
     case XENMEM_get_mfn_from_pfn:
-        rc = get_mfn_from_pfn(guest_handle_cast(arg, xen_get_mfn_from_pfn_t));
+        return get_mfn_from_pfn(guest_handle_cast(arg, xen_get_mfn_from_pfn_t));
         break;
 
     default:
