@@ -124,6 +124,7 @@ void pci_setup(void)
      * option that will have the least impact.
      */
     bool allow_memory_relocate = 1;
+    bool vgt_enable = 0;
 
     s = xenstore_read(HVM_XS_ALLOW_MEMORY_RELOCATE, NULL);
     if ( s )
@@ -134,6 +135,13 @@ void pci_setup(void)
     s = xenstore_read("platform/mmio_hole_size", NULL);
     if ( s )
         mmio_hole_size = strtoll(s, NULL, 0);
+
+    s = xenstore_read("platform/vgt", NULL);
+    if ( s ) {
+        vgt_enable = strtoll(s, NULL, 0);
+        if (vgt_enable)
+            printf("Detected vgt enabled.\n");
+    }
 
     /* Program PCI-ISA bridge with appropriate link routes. */
     isa_irq = 0;
@@ -350,6 +358,11 @@ void pci_setup(void)
         printf("Low MMIO hole not large enough for all devices,"
                " relocating some BARs to 64-bit\n");
         bar64_relocate = 1;
+    }
+
+    if(vga_devfn != 256 && vgt_enable && bar64_relocate)
+    {
+        pci_mem_start += (32ULL << 20);
     }
 
     /* Relocate RAM that overlaps PCI space (in 64k-page chunks). */
