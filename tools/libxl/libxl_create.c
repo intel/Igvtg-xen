@@ -355,7 +355,7 @@ int libxl__domain_build_info_setdefault(libxl__gc *gc,
         }
 
         libxl_defbool_setdefault(&b_info->u.hvm.nographic, false);
-
+        libxl_defbool_setdefault(&b_info->u.hvm.vgt, false);
         libxl_defbool_setdefault(&b_info->u.hvm.gfx_passthru, false);
 
         libxl__rdm_setdefault(gc, b_info);
