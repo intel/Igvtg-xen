@@ -538,20 +538,44 @@ static int libxl__build_device_model_args_old(libxl__gc *gc,
                     NULL);
         }
 
-        switch (b_info->u.hvm.vga.kind) {
-        case LIBXL_VGA_INTERFACE_TYPE_STD:
-            flexarray_append(dm_args, "-std-vga");
-            break;
-        case LIBXL_VGA_INTERFACE_TYPE_CIRRUS:
-            break;
-        case LIBXL_VGA_INTERFACE_TYPE_NONE:
-            flexarray_append_pair(dm_args, "-vga", "none");
-            break;
-        case LIBXL_VGA_INTERFACE_TYPE_QXL:
-            break;
-        default:
-            LOGD(ERROR, domid, "Invalid emulated video card specified");
-            return ERROR_INVAL;
+        if (libxl_defbool_val(b_info->u.hvm.vgt)) {
+            flexarray_vappend(dm_args, "-vga", "xengt", NULL);
+            if (b_info->u.hvm.vgt_low_gm_sz) {
+                flexarray_vappend(dm_args, "-vga_low_gm_sz",
+                    libxl__sprintf(gc, "%d", b_info->u.hvm.vgt_low_gm_sz), NULL);
+            }
+            if (b_info->u.hvm.vgt_high_gm_sz) {
+                flexarray_vappend(dm_args, "-vgt_high_gm_sz",
+                    libxl__sprintf(gc, "%d", b_info->u.hvm.vgt_high_gm_sz), NULL);
+            }
+            if (b_info->u.hvm.vgt_fence_sz) {
+                flexarray_vappend(dm_args, "-vgt_fenc_sz",
+                    libxl__sprintf(gc, "%d", b_info->u.hvm.vgt_fence_sz), NULL);
+            }
+            if (b_info->u.hvm.vgt_primary != -1) {
+                flexarray_vappend(dm_args, "-vgt_primary",
+                    libxl__sprintf(gc, "%d", b_info->u.hvm.vgt_primary), NULL);
+            }
+            if (b_info->u.hvm.vgt_monitor_config_file) {
+                flexarray_vappend(dm_args, "-vgt_monitor_config_file",
+                    libxl__sprintf(gc, "%s", b_info->u.hvm.vgt_monitor_config_file), NULL);
+            }
+        } else {
+            switch (b_info->u.hvm.vga.kind) {
+            case LIBXL_VGA_INTERFACE_TYPE_STD:
+                flexarray_append(dm_args, "-std-vga");
+                break;
+            case LIBXL_VGA_INTERFACE_TYPE_CIRRUS:
+                break;
+            case LIBXL_VGA_INTERFACE_TYPE_NONE:
+                flexarray_append_pair(dm_args, "-vga", "none");
+                break;
+            case LIBXL_VGA_INTERFACE_TYPE_QXL:
+                break;
+            default:
+                LOG(ERROR, "Invalid emulated video card specified");
+                return ERROR_INVAL;
+            }
         }
 
         if (b_info->u.hvm.boot) {
@@ -1119,28 +1143,53 @@ static int libxl__build_device_model_args_new(libxl__gc *gc,
             }
         }
 
-        switch (b_info->u.hvm.vga.kind) {
-        case LIBXL_VGA_INTERFACE_TYPE_STD:
-            flexarray_append_pair(dm_args, "-device",
-                GCSPRINTF("VGA,vgamem_mb=%d",
-                libxl__sizekb_to_mb(b_info->video_memkb)));
-            break;
-        case LIBXL_VGA_INTERFACE_TYPE_CIRRUS:
-            flexarray_append_pair(dm_args, "-device",
-                GCSPRINTF("cirrus-vga,vgamem_mb=%d",
-                libxl__sizekb_to_mb(b_info->video_memkb)));
-            break;
-        case LIBXL_VGA_INTERFACE_TYPE_NONE:
-            break;
-        case LIBXL_VGA_INTERFACE_TYPE_QXL:
-            /* QXL have 2 ram regions, ram and vram */
-            flexarray_append_pair(dm_args, "-device",
-                GCSPRINTF("qxl-vga,vram_size_mb=%"PRIu64",ram_size_mb=%"PRIu64,
-                (b_info->video_memkb/2/1024), (b_info->video_memkb/2/1024) ) );
-            break;
-        default:
-            LOGD(ERROR, guest_domid, "Invalid emulated video card specified");
-            return ERROR_INVAL;
+        /* TODO: some vga options are exclusive */
+        if (libxl_defbool_val(b_info->u.hvm.vgt)) {
+            flexarray_vappend(dm_args, "-vga", "xengt", NULL);
+            if (b_info->u.hvm.vgt_low_gm_sz) {
+                flexarray_vappend(dm_args, "-vgt_low_gm_sz",
+                    libxl__sprintf(gc, "%d", b_info->u.hvm.vgt_low_gm_sz), NULL);
+            }
+            if (b_info->u.hvm.vgt_high_gm_sz) {
+                flexarray_vappend(dm_args, "-vgt_high_gm_sz",
+                    libxl__sprintf(gc, "%d", b_info->u.hvm.vgt_high_gm_sz), NULL);
+            }
+            if (b_info->u.hvm.vgt_fence_sz) {
+                flexarray_vappend(dm_args, "-vgt_fence_sz",
+                    libxl__sprintf(gc, "%d", b_info->u.hvm.vgt_fence_sz), NULL);
+            }
+            if (b_info->u.hvm.vgt_primary != -1) {
+                flexarray_vappend(dm_args, "-vgt_primary",
+                    libxl__sprintf(gc, "%d", b_info->u.hvm.vgt_primary), NULL);
+            }
+            if (b_info->u.hvm.vgt_monitor_config_file) {
+                flexarray_vappend(dm_args, "-vgt_monitor_config_file",
+                    libxl__sprintf(gc, "%s", b_info->u.hvm.vgt_monitor_config_file), NULL);
+            }
+        } else {
+            switch (b_info->u.hvm.vga.kind) {
+            case LIBXL_VGA_INTERFACE_TYPE_STD:
+                flexarray_append_pair(dm_args, "-device",
+                    GCSPRINTF("VGA,vgamem_mb=%d",
+                    libxl__sizekb_to_mb(b_info->video_memkb)));
+                break;
+            case LIBXL_VGA_INTERFACE_TYPE_CIRRUS:
+                flexarray_append_pair(dm_args, "-device",
+                    GCSPRINTF("cirrus-vga,vgamem_mb=%d",
+                    libxl__sizekb_to_mb(b_info->video_memkb)));
+                break;
+            case LIBXL_VGA_INTERFACE_TYPE_NONE:
+                break;
+            case LIBXL_VGA_INTERFACE_TYPE_QXL:
+                /* QXL have 2 ram regions, ram and vram */
+                flexarray_append_pair(dm_args, "-device",
+                    GCSPRINTF("qxl-vga,vram_size_mb=%"PRIu64",ram_size_mb=%"PRIu64,
+                    (b_info->video_memkb/2/1024), (b_info->video_memkb/2/1024) ) );
+                break;
+            default:
+                LOGD(ERROR, guest_domid, "Invalid emulated video card specified");
+                return ERROR_INVAL;
+            }
         }
 
         if (b_info->u.hvm.boot) {
