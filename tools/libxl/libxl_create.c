@@ -424,7 +424,7 @@ int libxl__domain_build(libxl__gc *gc,
         vments[4] = "start_time";
         vments[5] = libxl__sprintf(gc, "%lu.%02d", start_time.tv_sec,(int)start_time.tv_usec/10000);
 
-        localents = libxl__calloc(gc, 9, sizeof(char *));
+        localents = libxl__calloc(gc, 11, sizeof(char *));
         i = 0;
         localents[i++] = "platform/acpi";
         localents[i++] = libxl_defbool_val(info->u.hvm.acpi) ? "1" : "0";
@@ -432,6 +432,8 @@ int libxl__domain_build(libxl__gc *gc,
         localents[i++] = libxl_defbool_val(info->u.hvm.acpi_s3) ? "1" : "0";
         localents[i++] = "platform/acpi_s4";
         localents[i++] = libxl_defbool_val(info->u.hvm.acpi_s4) ? "1" : "0";
+        localents[i++] = "platform/vgt";
+        localents[i++] = libxl_defbool_val(info->u.hvm.vgt) ? "1" : "0";
         if (info->u.hvm.mmio_hole_memkb) {
             uint64_t max_ram_below_4g =
                 (1ULL << 32) - (info->u.hvm.mmio_hole_memkb << 10);

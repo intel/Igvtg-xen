@@ -89,6 +89,7 @@ typedef unsigned int p2m_query_t;
                        | p2m_to_mask(p2m_ram_paging_out)      \
                        | p2m_to_mask(p2m_ram_paged)           \
                        | p2m_to_mask(p2m_ram_paging_in)       \
+                       | p2m_to_mask(p2m_mmio_write_dm)       \
                        | p2m_to_mask(p2m_ram_shared))
 
 /* Types that represent a physmap hole that is ok to replace with a shared
