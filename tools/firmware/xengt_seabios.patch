@@ -1,0 +1,43 @@
+--- a/seabios-dir/src/optionroms.c
++++ b/seabios-dir/src/optionroms.c
+@@ -415,21 +415,26 @@ vgarom_setup(void)
+     RunPCIroms = romfile_loadint("etc/pci-optionrom-exec", 2);
+     ScreenAndDebug = romfile_loadint("etc/screen-and-debug", 1);
+
+-    // Clear option rom memory
+-    memset((void*)BUILD_ROM_START, 0, rom_get_max() - BUILD_ROM_START);
+-
+-    // Find and deploy PCI VGA rom.
+-    struct pci_device *pci;
+-    foreachpci(pci) {
+-        if (!is_pci_vga(pci))
+-            continue;
+-        vgahook_setup(pci);
+-        init_pcirom(pci, 1, NULL);
+-        break;
++    if ((*(u16 *)BUILD_ROM_START) == 0xaa55) {
++	    // Option rom are already deployed on the system.
++	    init_optionrom((void *)BUILD_ROM_START, 0 , 1);
++    } else {
++	    // Clear option rom memory
++	    memset((void*)BUILD_ROM_START, 0, rom_get_max() - BUILD_ROM_START);
++
++	    // Find and deploy PCI VGA rom.
++	    struct pci_device *pci;
++	    foreachpci(pci) {
++		    if (!is_pci_vga(pci))
++			    continue;
++		    vgahook_setup(pci);
++		    init_pcirom(pci, 1, NULL);
++		    break;
++	    }
++
++	    // Find and deploy CBFS vga-style roms not associated with a device.
++	    run_file_roms("vgaroms/", 1, NULL);
+     }
+-
+-    // Find and deploy CBFS vga-style roms not associated with a device.
+-    run_file_roms("vgaroms/", 1, NULL);
+     rom_reserve(0);
+
+     if (rom_get_last() == BUILD_ROM_START)
