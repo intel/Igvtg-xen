@@ -531,7 +531,7 @@ static int libxl__build_device_model_args_old(libxl__gc *gc,
                     libxl__sprintf(gc, "%d", b_info->u.hvm.vgt_high_gm_sz), NULL);
             }
             if (b_info->u.hvm.vgt_fence_sz) {
-                flexarray_vappend(dm_args, "-vgt_fenc_sz",
+                flexarray_vappend(dm_args, "-vgt_fence_sz",
                     libxl__sprintf(gc, "%d", b_info->u.hvm.vgt_fence_sz), NULL);
             }
             if (b_info->u.hvm.vgt_primary != -1) {
@@ -545,6 +545,14 @@ static int libxl__build_device_model_args_old(libxl__gc *gc,
             if (b_info->u.hvm.vgt_monitor_config_file) {
                 flexarray_vappend(dm_args, "-vgt_monitor_config_file",
                     libxl__sprintf(gc, "%s", b_info->u.hvm.vgt_monitor_config_file), NULL);
+            }
+            if (b_info->u.hvm.vgt_priority) {
+                flexarray_vappend(dm_args, "-vgt_priority",
+                    libxl__sprintf(gc, "%d", b_info->u.hvm.vgt_priority), NULL);
+            }
+            if (b_info->u.hvm.tbs_period_ms) {
+                flexarray_vappend(dm_args, "-tbs_period_ms",
+                    libxl__sprintf(gc, "%d", b_info->u.hvm.tbs_period_ms), NULL);
             }
         } else {
             switch (b_info->u.hvm.vga.kind) {
@@ -958,6 +966,19 @@ static int libxl__build_device_model_args_new(libxl__gc *gc,
                 flexarray_vappend(dm_args, "-vgt_monitor_config_file",
                     libxl__sprintf(gc, "%s", b_info->u.hvm.vgt_monitor_config_file), NULL);
             }
+            if (b_info->u.hvm.vgt_priority) {
+                flexarray_vappend(dm_args, "-vgt_priority",
+                    libxl__sprintf(gc, "%d", b_info->u.hvm.vgt_priority), NULL);
+            }
+            if (b_info->u.hvm.tbs_period_ms) {
+                flexarray_vappend(dm_args, "-tbs_period_ms",
+                    libxl__sprintf(gc, "%d", b_info->u.hvm.tbs_period_ms), NULL);
+            }
+#if 1
+			flexarray_vappend(dm_args, "-D",
+							  libxl__sprintf(gc, " /tmp/qemu-debug.log"),
+							  NULL);
+#endif
         } else {
             switch (b_info->u.hvm.vga.kind) {
             case LIBXL_VGA_INTERFACE_TYPE_STD:
