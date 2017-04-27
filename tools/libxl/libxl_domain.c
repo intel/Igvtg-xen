@@ -1117,13 +1117,6 @@ static void devices_destroy_cb(libxl__egc *egc,
 
     destroy_vgt_instance(domid);
 
-    rc = xc_domain_destroy(ctx->xch, domid);
-    if (rc < 0) {
-        LIBXL__LOG_ERRNOVAL(ctx, LIBXL__LOG_ERROR, rc, "xc_domain_destroy failed for %d", domid);
-        rc = ERROR_FAIL;
-        goto out;
-    }
-
     libxl__unlock_domain_userdata(lock);
 
     /* Clean up qemu-save and qemu-resume files. They are
