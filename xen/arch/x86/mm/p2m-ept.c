@@ -546,7 +546,11 @@ static int resolve_misconfig(struct p2m_domain *p2m, unsigned long gfn)
                     e.ipat = ipat;
 
                     nt = p2m_recalc_type(e.recalc, e.sa_p2mt, p2m, gfn + i);
-                    if ( nt != e.sa_p2mt )
+		    if ( e.sa_p2mt == p2m_ioreq_server &&
+			 p2m->ioreq.server == NULL )
+			    nt = p2m_ram_rw;
+
+		    if ( nt != e.sa_p2mt)
                     {
                         if ( e.sa_p2mt == p2m_ioreq_server )
                         {
