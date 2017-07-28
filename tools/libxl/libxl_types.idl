@@ -488,6 +488,8 @@ libxl_domain_build_info = Struct("domain_build_info",[
                                        ("vgt_primary",      VgtInt),
                                        ("vgt_cap",      VgtInt),
                                        ("vgt_monitor_config_file", string),
+                                       ("vgt_priority",     VgtInt),
+                                       ("tbs_period_ms",    VgtInt),
                                        ("vnc",              libxl_vnc_info),
                                        # keyboard layout, default is en-us keyboard
                                        ("keymap",           string),

@@ -2276,6 +2276,10 @@ skip_vfb:
             b_info->u.hvm.vgt_cap = l;
 
         xlu_cfg_replace_string(config, "vgt_monitor_config_file", &b_info->u.hvm.vgt_monitor_config_file, 0);
+        if (!xlu_cfg_get_long(config, "vgt_priority", &l, 0))
+            b_info->u.hvm.vgt_priority = l;
+        if (!xlu_cfg_get_long(config, "tbs_period_ms", &l, 0))
+            b_info->u.hvm.tbs_period_ms = l;
 
         xlu_cfg_replace_string (config, "keymap", &b_info->u.hvm.keymap, 0);
         xlu_cfg_get_defbool (config, "spice", &b_info->u.hvm.spice.enable, 0);
