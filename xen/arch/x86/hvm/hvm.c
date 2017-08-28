@@ -1862,6 +1862,9 @@ int hvm_hap_nested_page_fault(paddr_t gpa, unsigned long gla,
          (npfec.write_access &&
           (p2m_is_discard_write(p2mt) || (p2mt == p2m_ioreq_server))) )
     {
+        if ( p2m_is_logdirty_range(p2m, mfn, mfn) && p2mt == p2m_ioreq_server )
+            paging_mark_dirty(currd, mfn);
+
         if ( !handle_mmio_with_translation(gla, gpa >> PAGE_SHIFT, npfec) )
             hvm_inject_hw_exception(TRAP_gp_fault, 0);
         rc = 1;
