@@ -252,7 +252,7 @@ static int modified_memory(struct domain *d,
 static bool allow_p2m_type_change(p2m_type_t old, p2m_type_t new)
 {
     if ( new == p2m_ioreq_server )
-        return old == p2m_ram_rw;
+        return (old == p2m_ram_rw) || (old == p2m_ram_logdirty);
 
     if ( old == p2m_ioreq_server )
         return new == p2m_ram_rw;
