@@ -182,7 +182,7 @@ static int modified_memory(struct domain *d,
 
         rc = COPY_FROM_GUEST_BUF_OFFSET(extent,
             bufs, EXTENTS_BUFFER, (*rem_extents - 1) * sizeof(extent));
-        if ( rc )
+        if ( !rc )
             return -EFAULT;
 
         if ( extent.pad )
