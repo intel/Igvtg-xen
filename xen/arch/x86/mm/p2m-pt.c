@@ -452,6 +452,9 @@ static int do_recalc(struct p2m_domain *p2m, unsigned long gfn)
                       p2m->domain->domain_id, gfn, level);
         ot = p2m_flags_to_type(l1e_get_flags(e));
         nt = p2m_recalc_type_range(true, ot, p2m, gfn & mask, gfn | ~mask);
+	if ( ot == p2m_ioreq_server && p2m->ioreq.server == NULL )
+		nt = p2m_ram_rw;
+
         if ( nt != ot )
         {
             unsigned long mfn = l1e_get_pfn(e);

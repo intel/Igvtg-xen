@@ -757,7 +757,7 @@ static inline p2m_type_t p2m_recalc_type_range(bool recalc, p2m_type_t t,
     if ( !recalc || !p2m_is_changeable(t) )
         return t;
 
-    if ( t == p2m_ioreq_server && p2m->ioreq.server != NULL )
+    if ( t == p2m_ioreq_server )
         return t;
 
     return p2m_is_logdirty_range(p2m, gfn_start, gfn_end) ? p2m_ram_logdirty
